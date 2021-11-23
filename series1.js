@@ -36,9 +36,13 @@ function sleep(ms) {
     console.log('Account id:', myAccount.accountId())
 
     const asset = new StellarSdk.Asset('qst5', newPublicKey)
-    const XLMAsset = new StellarSdk.Asset.native()
-    await channelPayment(myAccount, myKeypair, asset, '1', newPublicKey, newAccount, newKeypair)
-    //await sellOffer(myAccount, myKeypair, asset, XLMAsset, '1', 5)
+    const nativeAsset = new StellarSdk.Asset.native()
+    const issuingAccount = 'GCDNJUBQSX7AJWLJACMJ7I4BC3Z47BQUTMHEICZLE6MU4KQBRYG5JY6B';
+    const SRTAsset = new StellarSdk.Asset('SRT', issuingAccount)
+    const pathXLMAsset = new StellarSdk.Asset(nativeAsset.code, issuingAccount)
+    await pathPayment(newAccount, newKeypair, nativeAsset, '1', myPublicKey, SRTAsset, '1', [pathXLMAsset])
+    //await channelPayment(myAccount, myKeypair, asset, '1', newPublicKey, newAccount, newKeypair)
+    //await sellOffer(myAccount, myKeypair, asset, nativeAsset, '1', 5)
     //await changeTrust(myAccount, myKeypair, newPublicKey, asset, '15')
     //await createAndSendAsset(newAccount, newKeypair, myPublicKey, asset, '1')
     //await addData(myAccount, myKeypair, 'Hello', 'World')
@@ -61,13 +65,32 @@ async function submitTransaction(transaction) {
         console.log(JSON.stringify(transactionResult, null, 2));
         console.log('\nSuccess, view transaction');
     } catch (e) {
-        console.log('An error has occurred', e)
+        console.log('An error has occurred', e['response']['data']['extras'])
     }
 }
 
 async function genericTransaction(fromAccount) {
     return new StellarSdk.TransactionBuilder(fromAccount,
         { fee: fee.toString(), networkPassphrase : passphrase})
+}
+
+async function pathPayment(fromAccount, signingKeyPair,
+                           assetSent, amountSent, toPublicKey,
+                           assetRec, amountRec, path) {
+    const transaction = new StellarSdk.TransactionBuilder(fromAccount,
+        { fee: fee.toString(), networkPassphrase : passphrase})
+        .addOperation(StellarSdk.Operation.pathPaymentStrictSend({
+            sendAsset: assetSent,
+            sendAmount: amountSent,
+            destAsset: assetRec,
+            destMin: amountRec,
+            destination: toPublicKey,
+            path: path
+        }))
+        .setTimeout(30)
+        .build();
+    transaction.sign(signingKeyPair);
+    await submitTransaction(transaction);
 }
 
 async function channelPayment(fromAccount, signingKeyPair, asset, amount, toPublicKey, feeAccount, feeKeyPair) {
