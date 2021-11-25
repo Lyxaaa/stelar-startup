@@ -5,13 +5,13 @@ const StellarSdk = require('stellar-sdk');
 const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 const passphrase = StellarSdk.Networks.TESTNET;
 
-const mySecretKey = 'SBWN6TQ2B72IDBKM6QIRUAXLPMXGGVLPRI6IK3ODC7DOSMBPABULQF3Y';
+const mySecretKey = process.env.stellar_test_sk;
 const myKeypair = StellarSdk.Keypair.fromSecret(mySecretKey);
 const myPublicKey = myKeypair.publicKey();
-const _pk = 'GBS5UM66NTMGVTOBEYHHFTYIM2KF457DXOYQ4IHIZ2ZOJHSI7DRLPMRL';
+const _pk = process.env.stellar_test_pk;
 
-const newSecretKey = 'SBBJVHCZO7BPPUTZRY5N2BTCUIG67L5GUX77R7WB4UMXZY752CEOLZ4U';
-const gotPublic = 'GBUOK64Y2EO2P3ZFC5P77UCK3OBSTJLM4H7QIB5EUJRLZAWDT7WGYVZC';
+const newSecretKey = process.env.stellar_test_sk_2;
+const gotPublic = process.env.stellar_test_pk_2;
 const newKeypair = StellarSdk.Keypair.fromSecret(newSecretKey);
 const newPublicKey = newKeypair.publicKey();
 var fee
