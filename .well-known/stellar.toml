@@ -1,3 +1,7 @@
-{
-  "SQ02_EASTER_EGG": "Log into series 2 of Stellar Quest then visit quest.stellar.org/series2. Finally drag and drop your Stellar Quest series 2 badge PNG images onto the screen. Enjoy!"
+exports.endpoint = function(request, response){
+    response.writeHead(200, {
+        'Content-Type':'text/plain',
+        'Access-Control-Allow-Origin':'*',
+    })
+response.end('SQ02_EASTER_EGG="Log into series 2 of Stellar Quest then visit quest.stellar.org/series2. Finally drag and drop your Stellar Quest series 2 badge PNG images onto the screen. Enjoy!"')
 }
