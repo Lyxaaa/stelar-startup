@@ -40,7 +40,11 @@ function sleep(ms) {
     const issuingAccount = 'GCDNJUBQSX7AJWLJACMJ7I4BC3Z47BQUTMHEICZLE6MU4KQBRYG5JY6B';
     const SRTAsset = new StellarSdk.Asset('SRT', issuingAccount)
     const pathXLMAsset = new StellarSdk.Asset(nativeAsset.code, issuingAccount)
-    await pathPayment(newAccount, newKeypair, nativeAsset, '1', myPublicKey, SRTAsset, '1', [pathXLMAsset])
+    await changeTrust(myAccount, myKeypair,
+        new StellarSdk.Asset('lyxres2', 'GBXOPVNWXBQN6BGDSPBWLITB3UJ26GFPONUKYK357NNRZBV3ZJNHKLNN'),
+        '1')
+    //await buyOffer(myAccount, myKeypair)
+    //await pathPayment(newAccount, newKeypair, nativeAsset, '1', myPublicKey, SRTAsset, '1', [pathXLMAsset])
     //await channelPayment(myAccount, myKeypair, asset, '1', newPublicKey, newAccount, newKeypair)
     //await sellOffer(myAccount, myKeypair, asset, nativeAsset, '1', 5)
     //await changeTrust(myAccount, myKeypair, newPublicKey, asset, '15')
@@ -109,6 +113,21 @@ async function channelPayment(fromAccount, signingKeyPair, asset, amount, toPubl
     await submitTransaction(transaction);
 }
 
+async function buyOffer(account, signingKeyPair) {
+    const tx = new StellarSdk.TransactionBuilder(account,
+        {fee: fee.toString(), networkPassphrase: passphrase})
+        .addOperation(StellarSdk.Operation.manageBuyOffer({
+            selling: StellarSdk.Asset.native(),
+            buying: new StellarSdk.Asset('lyxres2', 'GDYUXSTK62LJHUCML7ECEBNRDH7OOLZXTPXMAQBIGWDQO5FHN4NNQGPN'),
+            buyAmount: '0.2',
+            price: 30
+        }))
+        .setTimeout(30)
+        .build()
+    tx.sign(signingKeyPair)
+    await submitTransaction(tx)
+}
+
 async function sellOffer(fromAccount, signingKeyPair, sellAsset, buyAsset, amount, price) {
     const transaction = new StellarSdk.TransactionBuilder(fromAccount,
         { fee: fee.toString(), networkPassphrase : passphrase})
@@ -124,7 +143,7 @@ async function sellOffer(fromAccount, signingKeyPair, sellAsset, buyAsset, amoun
     await submitTransaction(transaction);
 }
 
-async function changeTrust(fromAccount, signingKeyPair, toPublicKey, asset, limit) {
+async function changeTrust(fromAccount, signingKeyPair, asset, limit) {
     const transaction = new StellarSdk.TransactionBuilder(fromAccount,
         { fee: fee.toString(), networkPassphrase : passphrase})
         .addOperation(StellarSdk.Operation.changeTrust({

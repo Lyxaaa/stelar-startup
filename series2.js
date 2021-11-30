@@ -33,8 +33,11 @@ function sleep(ms) {
 
     const customAsset = new StellarSdk.Asset('s2q2', newPublicKey)
     const nativeAsset = new StellarSdk.Asset.native()
+    //await addTomlLink(myAccount, myKeyPair)
     //await claimableBalance(myAccount, myKeyPair, newAccount, newKeyPair, nativeAsset, albedoAccount)
-    await sponsorAccount(myAccount, myKeyPair)
+    await revokeSponsor(myAccount, myKeyPair, 'GDXHDCKLQ7WVMPTX5DPFQVJB5YJSIQYXGFVSTNRL4T43MI4NHYMQ6EUA')
+    //SD7TV4QEC4X5XZG3NKSAXQISHXKLLVESX4H6KL7TBG36JLUYRBLBI7RC
+    //await sponsorAccount(myAccount, myKeyPair)
     //await claimBalance(myAccount, myKeyPair)
     //await feeBumpPayment(myAccount, myKeyPair, newAccount, newKeyPair, nativeAsset)
     //await createAndIssueTrust(newAccount, newKeyPair, myAccount, myKeyPair, customAsset)
@@ -51,7 +54,32 @@ function sleep(ms) {
 
 })();
 
-async function sponsorAccount(sponsorAccount, sponsorKeyPair, childKeyPair = StellarSdk.Keypair.random()) {
+async function addTomlLink(account, keyPair) {
+    const tx = new StellarSdk.TransactionBuilder(account,
+        {fee: fee.toString(), networkPassphrase: passphrase})
+        .addOperation(StellarSdk.Operation.setOptions({
+            homeDomain: 'lyxaaa.github.io/stelar-startup/'
+        }))
+        .setTimeout(30)
+        .build()
+    tx.sign(keyPair)
+    await submitTransaction(tx)
+}
+
+async function revokeSponsor(sponsorAccount, sponsorKeyPair, childPublicKey) {
+    const tx = new StellarSdk.TransactionBuilder(sponsorAccount,
+        {fee: fee.toString(), networkPassphrase: passphrase})
+        .addOperation(StellarSdk.Operation.revokeAccountSponsorship({
+            account: childPublicKey
+        }))
+        .setTimeout(30)
+        .build()
+    tx.sign(sponsorKeyPair)
+    await submitTransaction(tx)
+}
+
+async function sponsorAccount(sponsorAccount, sponsorKeyPair) {
+    const childKeyPair = StellarSdk.Keypair.random()
     const tx = new StellarSdk.TransactionBuilder(sponsorAccount,
         {fee: fee.toString(), networkPassphrase: passphrase})
         .addOperation(StellarSdk.Operation.beginSponsoringFutureReserves({
@@ -61,9 +89,18 @@ async function sponsorAccount(sponsorAccount, sponsorKeyPair, childKeyPair = Ste
             destination: childKeyPair.publicKey(),
             startingBalance: '0'
         }))
+        .addOperation(StellarSdk.Operation.payment({
+            asset: StellarSdk.Asset.native(),
+            destination: childKeyPair.publicKey(),
+            amount: '1'
+        }))
+        .addOperation(StellarSdk.Operation.endSponsoringFutureReserves({
+            source: childKeyPair.publicKey()
+        }))
         .setTimeout(30)
         .build()
     tx.sign(sponsorKeyPair)
+    tx.sign(childKeyPair)
     console.log('PK:', childKeyPair.publicKey(), '\nSK:', childKeyPair.secret())
     await submitTransaction(tx)
 }
